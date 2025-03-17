@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wireshark Web Interface</title>
+    <style>
+        .packet {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Wireshark Web Interface</h1>
+    <div id="packets"></div>
+    
+    <script>
+        const evtSource = new EventSource('/capture');
+        const packetsDiv = document.getElementById('packets');
+        
+        evtSource.onmessage = function(event) {
+            const packet = JSON.parse(event.data);
+            const packetDiv = document.createElement('div');
+            packetDiv.className = 'packet';
+            packetDiv.textContent = `${packet._source.layers.frame["frame.time"]} - ${packet._source.layers.ip["ip.src"]} -> ${packet._source.layers.ip["ip.dst"]}`;
+            packetsDiv.insertBefore(packetDiv, packetsDiv.firstChild);
+        };
+    </script>
+</body>
+</html>
