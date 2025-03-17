@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  wireshark:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    network_mode: "host"
+    environment:
+      - DISPLAY=${DISPLAY}
+      - WIRESHARK_OPTION=value  # Ajoutez vos options de configuration ici
+    cap_add:
+      - SYS_ADMIN
+      - SYS_PTRACE
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    volumes:
+      - ./config:/app/config  # Montez un volume pour les fichiers de configuration
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
