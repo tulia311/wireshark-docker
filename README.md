@@ -1,3 +1,5 @@
+
+
 # Projet Docker Wireshark
 
 ![Wireshark Logo](./wireshark.png)
@@ -5,6 +7,15 @@
 Ce projet fournit un environnement Dockerisé pour exécuter Wireshark et analyser les captures de paquets.
 
 ## Structure du projet
+
+```
+wireshark-docker/
+├── Dockerfile
+├── docker-compose.yml
+├── .gitignore
+├── LICENSE
+└── README.md
+```
 
 - **Dockerfile**: Contient les instructions pour construire l'image Docker pour Wireshark, y compris l'image de base, les dépendances et la configuration de l'environnement.
 - **docker-compose.yml**: Configure les services Docker pour le projet, définissant les conteneurs, réseaux et volumes nécessaires pour exécuter Wireshark et ses dépendances.
