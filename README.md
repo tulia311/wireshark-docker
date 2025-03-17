@@ -16,7 +16,7 @@ Pour commencer avec ce projet, suivez ces étapes :
 
 1. **Cloner le dépôt** :
    ```
-   git clone <repository-url>
+   git clone https://github.com/tulia311/wireshark-docker.git
    cd wireshark-docker
    ```
 
