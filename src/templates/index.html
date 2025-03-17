@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wireshark Web Interface</title>
+    <style>
+        .packet {
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+    <script>
+        const eventSource = new EventSource('/capture');
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            document.getElementById('capture-output').innerHTML += JSON.stringify(data) + '<br>';
+        };
+    </script>
+</head>
+<body>
+    <h1>Capture réseau en direct</h1>
+    <div id="capture-output"></div>
+</body>
+</html>

@@ -10,14 +10,18 @@ RUN apk update && \
     gcc \
     musl-dev \
     python3-dev \
-    libcap # Ajout de libcap pour setcap
+    libcap
 
 # Installation des dépendances via apk
 RUN apk add --no-cache \
     py3-flask \
-    py3-gunicorn
+    py3-gunicorn \
+    py3-werkzeug
 
-# Création d'un utilisateur non-root et configuration des permissions
+# Définition de la variable DISPLAY
+ENV DISPLAY=:0
+
+# Création de l'utilisateur et configuration des permissions
 RUN adduser -S wireshark -G wireshark && \
     apk add --no-cache libcap && \
     setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' /usr/bin/dumpcap && \

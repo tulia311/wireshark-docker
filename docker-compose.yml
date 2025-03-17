@@ -4,17 +4,18 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    network_mode: "host"
+    network_mode: "bridge"
     environment:
       - DISPLAY=${DISPLAY}
-      - WIRESHARK_OPTION=value  # Ajoutez vos options de configuration ici
+      - CAPTURE_INTERFACE=any
+      - CAPTURE_FILTER=
     cap_add:
-      - SYS_ADMIN
+      - NET_ADMIN
+      - NET_RAW
       - SYS_PTRACE
-    devices:
-      - /dev/bus/usb:/dev/bus/usb
     volumes:
-      - ./config:/app/config  # Montez un volume pour les fichiers de configuration
+      - ./config:/app/config
+      - ./src:/app
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "8080:8080"
