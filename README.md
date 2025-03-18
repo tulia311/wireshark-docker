@@ -90,11 +90,36 @@ Variables disponibles :
 ## Sécurité
 
 **Important** : Ce conteneur nécessite des privilèges élevés pour la capture réseau.
-Pour la production :
-- Limitez l'accès au port 8080
-- Utilisez HTTPS
-- Ajoutez une authentification
-- Restreignez les interfaces accessibles
+
+### Recommandations de sécurité
+
+1. **Isolation réseau** :
+   - Utilisez des réseaux Docker dédiés
+   - Limitez les interfaces réseau exposées
+   - Configurez des règles de pare-feu strictes
+
+2. **Authentification et autorisation** :
+   - Implémentez une authentification forte (OAuth2, JWT)
+   - Utilisez HTTPS avec des certificats valides
+   - Définissez des rôles utilisateurs avec permissions limitées
+
+3. **Configuration du conteneur** :
+   ```bash
+   docker run --name wireshark-web \
+     --net=host \
+     --security-opt=no-new-privileges \
+     --cap-drop=ALL \
+     --cap-add=NET_ADMIN \
+     --cap-add=NET_RAW \
+     -p 127.0.0.1:8080:8080 \
+     wireshark-web
+   ```
+
+4. **Bonnes pratiques** :
+   - Mettez régulièrement à jour l'image Docker
+   - Surveillez les logs pour détecter les activités suspectes
+   - Effectuez des audits de sécurité périodiques
+   - Limitez l'accès aux fichiers de capture
 
 ## Exigences
 
