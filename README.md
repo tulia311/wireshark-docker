@@ -31,7 +31,6 @@ wireshark-docker/
 1. **Cloner le dépôt** :
    ```bash
    git clone https://github.com/tulia311/wireshark.git
-   mkdir wireshark-docker
    cd wireshark-docker
    ```
 
