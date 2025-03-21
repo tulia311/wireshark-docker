@@ -3,6 +3,7 @@ FROM archlinux
 # Installation des dépendances
 RUN pacman -Syu --noconfirm && \
     pacman -S --noconfirm \
+    pacman -Syu --noconfirm python python-pip \
     wireshark-cli \
     wireshark-qt \
     python \
@@ -11,7 +12,7 @@ RUN pacman -Syu --noconfirm && \
     python-flask \
     gunicorn \
     python-werkzeug \
-    libcap
+    libcap 
 
 # Définition de la variable DISPLAY
 ENV DISPLAY=:0
@@ -21,8 +22,10 @@ RUN groupadd -f wireshark && \
     useradd -m -g wireshark wireshark && \
     setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' /usr/bin/dumpcap && \
     chown root:wireshark /usr/bin/dumpcap && \
-    chmod 750 /usr/bin/dumpcap
-
+    chmod 750 /usr/bin/dumpcap && \
+    pip install  --break-system-packages flask \
+    pacman -Syu --noconfirm python python-numpy
+    
 # Création du répertoire de travail
 WORKDIR /app
 
