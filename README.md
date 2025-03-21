@@ -45,7 +45,7 @@ wireshark-docker/
      --net=host \
      --privileged \
      -p 8080:8080 \
-     wireshark-web
+     wireshark
    ```
 
 4. **Accéder à l'interface web** :
@@ -62,7 +62,7 @@ docker run --name wireshark \
   -p 8080:8080 \
   -e CAPTURE_INTERFACE=eth0 \
   -e CAPTURE_FILTER="port 80" \
-  wireshark-web
+  wireshark
 ```
 
 Variables disponibles :
