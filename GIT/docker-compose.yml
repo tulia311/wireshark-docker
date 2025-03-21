@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  wireshark:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    network_mode: "host"
+    environment:
+      - DISPLAY=${DISPLAY}
+      - CAPTURE_INTERFACE=any
+      - CAPTURE_FILTER=
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_PTRACE
+    volumes:
+      - ./config:/app/config
+      - ./src:/app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"

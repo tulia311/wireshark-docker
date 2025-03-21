@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wireshark Web Interface</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 20px;
+        }
+        .packet {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .packet-header {
+            cursor: pointer;
+            padding: 8px;
+            background-color: #f8f9fa;
+        }
+        .packet-details {
+            display: none;
+            padding: 10px;
+            background-color: #fff;
+            border-top: 1px solid #ddd;
+        }
+        .capture-controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-active {
+            background-color: #28a745;
+        }
+        .status-inactive {
+            background-color: #dc3545;
+        }
+        #packetCount {
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        .protocol-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            margin-right: 5px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background-color: #6c757d;
+            color: white;
+        }
+        .tcp { background-color: #0d6efd; }
+        .udp { background-color: #198754; }
+        .http { background-color: #fd7e14; }
+        .dns { background-color: #6f42c1; }
+        .icmp { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Wireshark Web Interface</h1>
+
+        <div class="capture-controls">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="interfaceSelect" class="form-label">Interface réseau:</label>
+                    <select id="interfaceSelect" class="form-select">
+                        <option value="any">Toutes les interfaces</option>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label for="captureFilter" class="form-label">Filtre de capture:</label>
+                    <input type="text" id="captureFilter" class="form-control" placeholder="Ex: port 80 or tcp">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button id="startCaptureBtn" class="btn btn-primary me-2">Démarrer la capture</button>
+                    <button id="stopCaptureBtn" class="btn btn-danger" disabled>Arrêter</button>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="capture-status">
+                        État: <span class="status-indicator status-inactive"></span>
+                        <span id="captureStatus">Inactif</span>
+                        <span id="packetCount">(0 paquets)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="capture-output" class="mt-4">
+            <div class="alert alert-info">Démarrez une capture pour voir les paquets réseau s'afficher ici.</div>
+        </div>
+    </div>
+
+    <script>
+        let captureActive = false;
+        let packetCount = 0;
+        let eventSource = null;
+
+        const interfaceSelect = document.getElementById('interfaceSelect');
+        const captureFilter = document.getElementById('captureFilter');
+        const startCaptureBtn = document.getElementById('startCaptureBtn');
+        const stopCaptureBtn = document.getElementById('stopCaptureBtn');
+        const captureStatus = document.getElementById('captureStatus');
+        const statusIndicator = document.querySelector('.status-indicator');
+        const packetCountDisplay = document.getElementById('packetCount');
+        const captureOutput = document.getElementById('capture-output');
+
+        async function loadInterfaces() {
+            try {
+                const response = await fetch('/api/interfaces');
+                const interfaces = await response.json();
+
+                interfaceSelect.innerHTML = '<option value="any">Toutes les interfaces</option>';
+
+                interfaces.forEach(intf => {
+                    const option = document.createElement('option');
+                    option.value = intf.name;
+                    option.textContent = `${intf.name} ${intf.description}`;
+                    interfaceSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erreur lors du chargement des interfaces:', error);
+                alert('Impossible de charger les interfaces réseau');
+            }
+        }
+
+        async function startCapture() {
+            if (captureActive) return;
+
+            try {
+                const response = await fetch('/api/start_capture', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        interface: interfaceSelect.value,
+                        filter: captureFilter.value
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Erreur lors du démarrage de la capture');
+                }
+
+                captureActive = true;
+                updateUI(true);
+                startCaptureStream();
+
+                packetCount = 0;
+                captureOutput.innerHTML = '';
+                updatePacketCount();
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert(error.message);
+            }
+        }
+
+        async function stopCapture() {
+            if (!captureActive) return;
+
+            try {
+                const response = await fetch('/api/stop_capture', {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Erreur lors de l\'arrêt de la capture');
+                }
+
+                captureActive = false;
+                updateUI(false);
+                stopCaptureStream();
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert(error.message);
+            }
+        }
+
+        function updateUI(isActive) {
+            startCaptureBtn.disabled = isActive;
+            stopCaptureBtn.disabled = !isActive;
+            interfaceSelect.disabled = isActive;
+            captureFilter.disabled = isActive;
+
+            if (isActive) {
+                captureStatus.textContent = 'Actif';
+                statusIndicator.classList.remove('status-inactive');
+                statusIndicator.classList.add('status-active');
+            } else {
+                captureStatus.textContent = 'Inactif';
+                statusIndicator.classList.remove('status-active');
+                statusIndicator.classList.add('status-inactive');
+            }
+        }
+
+        function startCaptureStream() {
+            if (eventSource) {
+                stopCaptureStream();
+            }
+
+            eventSource = new EventSource('/capture');
+
+            eventSource.onmessage = function(event) {
+                try {
+                    const packet = JSON.parse(event.data);
+                    displayPacket(packet);
+                    packetCount++;
+                    updatePacketCount();
+                } catch (error) {
+                    console.error('Erreur de traitement des données:', error);
+                }
+            };
+
+            eventSource.onerror = function() {
+                console.error('Erreur dans le flux SSE');
+                stopCaptureStream();
+                captureActive = false;
+                updateUI(false);
+            };
+        }
+
+        function stopCaptureStream() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+        }
+
+        function displayPacket(packet) {
+            try {
+                const timestamp = new Date().toISOString();
+                let source = "Unknown";
+                let destination = "Unknown";
+                let protocols = [];
+                let length = 0;
+
+                if (packet.layers && packet.layers.frame) {
+                    length = packet.layers.frame["frame.len"];
+                }
+
+                if (packet.layers && packet.layers.ip) {
+                    source = packet.layers.ip["ip.src"];
+                    destination = packet.layers.ip["ip.dst"];
+                }
+            } catch (error) {
+                console.error('Erreur lors de l\'affichage du paquet:', error);
+            }
+        }
+
+        // Event listeners
+        startCaptureBtn.addEventListener('click', startCapture);
+        stopCaptureBtn.addEventListener('click', stopCapture);
+
+        // Charger les interfaces au chargement de la page
+        loadInterfaces();
+    </script>
+</body>
+</html>
