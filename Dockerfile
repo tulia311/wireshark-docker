@@ -16,6 +16,9 @@ RUN pacman -Syu --noconfirm && \
 # Définition de la variable DISPLAY
 ENV DISPLAY=:0
 
+# Changement d'utilisateur
+USER root
+
 # Création de l'utilisateur et configuration des permissions
 RUN groupadd -f wireshark && \
     useradd -m -g wireshark wireshark && \
@@ -29,10 +32,12 @@ WORKDIR /app
 # Copie des fichiers nécessaires
 COPY src/app.py /app/
 COPY src/templates /app/templates/
+COPY venv/ /app/venv/
 
 # Configuration des permissions
 RUN chown -R wireshark:wireshark /app && \
-    chmod -R 755 /app
+    chmod -R 755 /app && \
+    chmod -R 775 /app/venv 
 
 # Changement d'utilisateur
 USER wireshark
