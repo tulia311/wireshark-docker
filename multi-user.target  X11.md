@@ -1,10 +1,4 @@
-![Wireshark Logo](./wireshark.png)
-
-# 
-
----
-
-# Configuration de Docker avec X11 sur Debian en Mode Multi-utilisateur
+## Configuration de Docker avec X11 sur Debian en Mode Multi-utilisateur
 
 Ce rapport analyse la situation où un système Debian configuré en mode multi-utilisateur (sans interface graphique par défaut) tente d'exécuter des applications graphiques depuis des conteneurs Docker. Les erreurs d'affichage observées sont typiques lorsque X11 n'est pas correctement configuré ou activé.
 
