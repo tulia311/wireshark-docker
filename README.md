@@ -31,21 +31,21 @@ wireshark-docker/
 1. **Cloner le dépôt** :
    ```bash
    git clone https://github.com/tulia311/wireshark.git
-   cd wireshark-docker
+   cd wireshark
    ```
 
 2. **Construire l'image Docker** :
    ```bash
-   docker build -t wireshark-web .
+   docker build -t wireshark .
    ```
 
 3. **Exécuter le conteneur** :
    ```bash
-   docker run --name wireshark-web \
+   docker run --name wireshark \
      --net=host \
      --privileged \
      -p 8080:8080 \
-     wireshark-web
+     wireshark
    ```
 
 4. **Accéder à l'interface web** :
@@ -56,13 +56,13 @@ wireshark-docker/
 Vous pouvez personnaliser le comportement via des variables d'environnement :
 
 ```bash
-docker run --name wireshark-web \
+docker run --name wireshark \
   --net=host \
   --privileged \
   -p 8080:8080 \
   -e CAPTURE_INTERFACE=eth0 \
   -e CAPTURE_FILTER="port 80" \
-  wireshark-web
+  wireshark
 ```
 
 Variables disponibles :
@@ -105,14 +105,14 @@ Variables disponibles :
 
 3. **Configuration du conteneur** :
    ```bash
-   docker run --name wireshark-web \
+   docker run --name wireshark \
      --net=host \
      --security-opt=no-new-privileges \
      --cap-drop=ALL \
      --cap-add=NET_ADMIN \
      --cap-add=NET_RAW \
      -p 127.0.0.1:8080:8080 \
-     wireshark-web
+     wireshark
    ```
 
 4. **Bonnes pratiques** :

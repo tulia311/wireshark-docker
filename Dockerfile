@@ -1,49 +1,37 @@
-FROM alpine:latest
+FROM archlinux
 
-# Installation des dépendances
-RUN apk update && \
-    apk add --no-cache \
-    wireshark \
-    python3 \
-    py3-pip \
-    tshark \
-    gcc \
-    musl-dev \
-    python3-dev \
-    libcap
+# Mise à jour des dépôts et installation des dépendances
+RUN pacman -Syu --noconfirm && \
+    pacman -S --noconfirm \
+    wireshark-qt \
+    libcap \
+    xorg-xauth \
+    xcb-util-cursor \
+    xcb-util-image \
+    xcb-util-keysyms \
+    pipewire \
+    pipewire-jack \
+    qt6-base \
+    qt6-wayland \
+    libxkbcommon-x11 \
+    harfbuzz \
+    freetype2 \
+    mesa \
+    libglvnd \
+    ttf-dejavu
 
-# Installation des dépendances via apk
-RUN apk add --no-cache \
-    py3-flask \
-    py3-gunicorn \
-    py3-werkzeug
-
-# Définition de la variable DISPLAY
-ENV DISPLAY=:0
-
-# Création de l'utilisateur et configuration des permissions
-RUN adduser -S wireshark -G wireshark && \
-    apk add --no-cache libcap && \
+# Création d'un utilisateur non-root
+RUN groupadd -f wireshark && \
+    useradd -m -g wireshark -s /bin/bash wireshark_user && \
     setcap 'CAP_NET_RAW+eip CAP_NET_ADMIN+eip' /usr/bin/dumpcap && \
-    chown root:wireshark /usr/bin/dumpcap && \
     chmod 750 /usr/bin/dumpcap
 
-# Création du répertoire de travail
-WORKDIR /app
+# Variables d'environnement
+ENV DISPLAY=:0
+ENV ENV QT_QPA_PLATFORM=xcb
+ENV XAUTHORITY=/home/wireshark_user/.Xauthority
 
-# Copie des fichiers nécessaires
-COPY src/app.py /app/
-COPY src/templates /app/templates/
+WORKDIR /home/wireshark_user
+USER wireshark_user
 
-# Configuration des permissions
-RUN chown -R wireshark:wireshark /app && \
-    chmod -R 755 /app
-
-# Changement d'utilisateur
-USER wireshark
-
-# Exposition du port
-EXPOSE 8080
-
-# Démarrage de l'application
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
+CMD ["wireshark"]

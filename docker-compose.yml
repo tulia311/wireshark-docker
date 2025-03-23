@@ -1,21 +1,19 @@
 version: '3.8'
 services:
   wireshark:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    network_mode: "bridge"
+    container_name: wireshark
+    build: .
     environment:
-      - DISPLAY=${DISPLAY}
-      - CAPTURE_INTERFACE=any
-      - CAPTURE_FILTER=
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-      - SYS_PTRACE
+      - DISPLAY=${DISPLAY}  # Hérite la variable DISPLAY de l'hôte
+      - QT_QPA_PLATFORM=wayland  # Utilise le backend Wayland pour Qt
+      - XAUTHORITY=/home/wireshark_user/.Xauthority  # Chemin vers le fichier d'autorisation X11
     volumes:
-      - ./config:/app/config
-      - ./src:/app
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
+      - /tmp/.X11-unix:/tmp/.X11-unix  # Partage le socket X11
+      - /run/user/1000/.mutter-Xwaylandauth.4CME32:/home/wireshark_user/.Xauthority:ro \  # Autorisations X11
+    network_mode: host  # Accès direct aux interfaces réseau
+    cap_add:
+      - NET_ADMIN 
+      - NET_RAW
+    privileged: true  # Optionnel (si nécessaire pour l'accès réseau)
+    devices:
+      - /dev/net/tun:/dev/net/tun  # Optionnel (si nécessaire pour l'accès réseau)
